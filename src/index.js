@@ -6,7 +6,7 @@ const YAML = require('yamljs');
 const app = express();
 
 // Load Swagger OpenAPI documentation
-const swaggerDocument = YAML.load('../openapi.yaml');
+const swaggerDocument = YAML.load('./openapi.yaml');
 
 // Use Swagger UI middleware to serve documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
