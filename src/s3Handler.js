@@ -1,56 +1,42 @@
 
-const AWS = require('aws-sdk');
+const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
-AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: 'us-west-2'  // Set your AWS region
-});
+const s3Client = new S3Client({ region: process.env.AWS_REGION });
 
-const s3 = new AWS.S3();
-const bucketName = process.env.S3_BUCKET_NAME;
-
-// Create - Upload a file to S3
+// Upload a file to S3
 const uploadFile = async (fileName, fileContent) => {
     const params = {
-        Bucket: bucketName,
+        Bucket: process.env.S3_BUCKET_NAME,
         Key: fileName,
-        Body: fileContent
+        Body: fileContent,
     };
-    return s3.upload(params).promise();
+    const command = new PutObjectCommand(params);
+    return s3Client.send(command);
 };
 
-// Read - Download a file from S3
+// Download a file from S3
 const getFile = async (fileName) => {
     const params = {
-        Bucket: bucketName,
-        Key: fileName
-    };
-    return s3.getObject(params).promise();
-};
-
-// Update - Update an existing file in S3
-const updateFile = async (fileName, fileContent) => {
-    const params = {
-        Bucket: bucketName,
+        Bucket: process.env.S3_BUCKET_NAME,
         Key: fileName,
-        Body: fileContent
     };
-    return s3.upload(params).promise();
+    const command = new GetObjectCommand(params);
+    return getSignedUrl(s3Client, command, { expiresIn: 3600 });
 };
 
-// Delete - Delete a file from S3
+// Delete a file from S3
 const deleteFile = async (fileName) => {
     const params = {
-        Bucket: bucketName,
-        Key: fileName
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: fileName,
     };
-    return s3.deleteObject(params).promise();
+    const command = new DeleteObjectCommand(params);
+    return s3Client.send(command);
 };
 
 module.exports = {
   uploadFile,
   getFile,
-  updateFile,
   deleteFile
 };
